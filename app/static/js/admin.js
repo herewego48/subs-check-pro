@@ -86,9 +86,9 @@ import { initConfigForm, renderConfigForm, collectConfigForm } from './config-fo
     analysisSummary: $('#analysisSummary'),
 
     toggleEditorModeBtn: $('#toggleEditorMode'),
-    cfgTabBar:           $('#cfgTabBar'),
-    cfgPanelsWrap:       $('#cfgPanels'),
-    editorWrapper:       $('#editorWrapper'),
+    cfgTabBar: $('#cfgTabBar'),
+    cfgPanelsWrap: $('#cfgPanels'),
+    editorWrapper: $('#editorWrapper'),
     toastContainer: document.getElementById('toastContainer') || createToastContainer()
 
   }
@@ -132,48 +132,50 @@ import { initConfigForm, renderConfigForm, collectConfigForm } from './config-fo
 
   // ==================== 核心工具函数 ====================
 
+  /**
+ * 切换表单 / YAML 编辑器视图
+ * 使用 document.getElementById 而不依赖 els，避免引用失效
+ */
   function switchEditorMode(mode) {
-  editorMode = mode
-  const isForm = (mode === 'form')
+    editorMode = mode
+    const isForm = (mode === 'form')
 
-  // Tab 导航栏
-  const tabBar = document.getElementById('cfgTabBar')
-  if (tabBar) tabBar.style.display = isForm ? '' : 'none'
+    // 分段按钮高亮
+    document.querySelectorAll('.cfg-mode-btn[data-mode]').forEach(btn =>
+      btn.classList.toggle('active', btn.dataset.mode === mode)
+    )
 
-  // 表单面板
-  const panels = document.getElementById('cfgPanels')
-  if (panels) panels.style.display = isForm ? '' : 'none'
+    // Tab 导航栏 / 表单面板 / YAML 编辑器
+    const tabBar = document.getElementById('cfgTabBar')
+    const panels = document.getElementById('cfgPanels')
+    const edWrap = document.getElementById('editorWrapper')
+    if (tabBar) tabBar.style.display = isForm ? '' : 'none'
+    if (panels) panels.style.display = isForm ? '' : 'none'
+    if (edWrap) edWrap.style.display = isForm ? 'none' : ''
 
-  // YAML 编辑器容器
-  const edWrap = document.getElementById('editorWrapper')
-  if (edWrap) edWrap.style.display = isForm ? 'none' : ''
+    // 搜索按钮
+    const srchBtn = document.getElementById('searchBtn')
+    if (srchBtn) {
+      srchBtn.style.display = isForm ? 'none' : ''
+      srchBtn.disabled = !sessionKey
+    }
 
-  // 搜索按钮：仅 YAML 模式可见
-  const srchBtn = document.getElementById('searchBtn')
-  if (srchBtn) srchBtn.style.display = isForm ? 'none' : ''
-
-  // 切换按钮视觉高亮
-  const toggleBtn = document.getElementById('toggleEditorMode')
-  if (toggleBtn) {
-    toggleBtn.title = isForm ? '切换到 YAML 编辑器' : '切换到表单界面'
     if (isForm) {
-      toggleBtn.style.color = ''
-      toggleBtn.style.background = ''
+      // ★ Bug 修复：切到表单时，从编辑器当前内容重渲，保证数据最新
+      const src = (codeMirrorView ? codeMirrorView.state.doc.toString() : '') || _rawConfigYaml
+      if (src) {
+        _rawConfigYaml = src
+        try { renderConfigForm(window.YAML.parse(src)) }
+        catch (e) { console.warn('表单渲染失败:', e) }
+      }
     } else {
-      toggleBtn.style.color = 'var(--accent)'
-      toggleBtn.style.background = 'color-mix(in srgb, var(--accent) 10%, transparent)'
+      // 切到 YAML：填充最新原始串（含注释）
+      if (_rawConfigYaml) {
+        codeMirrorView ? setEditorContent(_rawConfigYaml) : initCodeMirror(_rawConfigYaml)
+        if (codeMirrorView?.scrollDOM) codeMirrorView.scrollDOM.scrollTop = 0
+      }
     }
   }
-
-  // 切入 YAML 模式：用原始 YAML 字符串填充编辑器（保留注释）
-  if (!isForm) {
-    if (_rawConfigYaml) {
-      codeMirrorView ? setEditorContent(_rawConfigYaml) : initCodeMirror(_rawConfigYaml)
-      if (codeMirrorView?.scrollDOM) codeMirrorView.scrollDOM.scrollTop = 0
-    }
-  }
-}
-
   /**
    * 创建并返回 Toast 容器
    * @returns {HTMLDivElement} Toast 容器元素
@@ -2225,97 +2227,76 @@ import { initConfigForm, renderConfigForm, collectConfigForm } from './config-fo
   }
 
   async function loadConfigValidated() {
-  if (!sessionKey) return
-  const r = await sfetch(API.config)
-  if (!r.ok) return showToast('读取配置失败', 'warn')
+    if (!sessionKey) return
+    const r = await sfetch(API.config)
+    if (!r.ok) return showToast('读取配置失败', 'warn')
 
-  const raw =
-    typeof r.payload?.content === 'string'
-      ? r.payload.content
-      : String(r.payload || '')
+    const raw =
+      typeof r.payload?.content === 'string'
+        ? r.payload.content
+        : String(r.payload || '')
 
-  // ① 保存原始串（含注释），供 YAML 模式和保存时使用
-  _rawConfigYaml = raw
+    // ① 保存含注释的原始字符串
+    _rawConfigYaml = raw
 
-  // ② 如果当前在 YAML 模式，更新编辑器
-  if (editorMode === 'yaml') {
-    codeMirrorView ? setEditorContent(raw) : initCodeMirror(raw)
-    if (codeMirrorView?.scrollDOM) codeMirrorView.scrollDOM.scrollTop = 0
-  }
-
-  // ③ 渲染表单（parse 得到 JS 对象，仅用于表单填值）
-  try {
-    const parsed = window.YAML.parse(raw)
-    renderConfigForm(parsed)
-  } catch (e) {
-    console.warn('表单渲染失败，YAML 解析错误:', e)
-  }
-}
-
-  async function saveConfigWithValidation() {
-  if (!sessionKey) return
-
-  let formatted
-
-  try {
-    if (editorMode === 'form') {
-      // ── 表单模式 ──────────────────────────────────────
-      // 以原始 YAML（含注释）为基础，把表单的新值写入 Document
-      const base = _rawConfigYaml || ''
-      const doc  = window.YAML.parseDocument(base)
-
-      if (doc.errors?.length) {
-        return showToast('原始配置 YAML 解析错误：' + doc.errors[0].message, 'error', 5000)
-      }
-
-      const formData = collectConfigForm()
-
-      // 遍历表单收集的所有 key，更新 Document 中对应的节点
-      // 使用 doc.set 保留同级注释；嵌套 key 按需展开
-      for (const [key, value] of Object.entries(formData)) {
-        // yaml 库 Document.set(key, value) 会保留该 key 原有的行注释
-        doc.set(key, value)
-      }
-
-      formatted = doc.toString({ lineWidth: 0 })
-
-      // 同步更新 _rawConfigYaml，下次保存/切换 YAML 模式可用
-      _rawConfigYaml = formatted
-
-    } else {
-      // ── YAML 编辑器模式 ───────────────────────────────
-      if (!codeMirrorView) return
-      const rawContent = codeMirrorView.state.doc.toString()
-      const doc = window.YAML.parseDocument(rawContent)
-
-      if (doc.errors?.length) {
-        return showToast('YAML 语法错误：' + doc.errors[0].message, 'error', 5000)
-      }
-
-      formatted = doc.toString({ lineWidth: 0 })
-      setEditorContent(formatted)
-      _rawConfigYaml = formatted
+    // ② YAML 模式下同步编辑器
+    if (editorMode === 'yaml') {
+      codeMirrorView ? setEditorContent(raw) : initCodeMirror(raw)
+      if (codeMirrorView?.scrollDOM) codeMirrorView.scrollDOM.scrollTop = 0
     }
 
-  } catch (e) {
-    return showToast('校验失败：' + e.message, 'error')
+    // ③ 渲染表单（纯 JS 对象，不含注释，仅用于填值）
+    try {
+      renderConfigForm(window.YAML.parse(raw))
+    } catch (e) {
+      console.warn('表单渲染失败:', e)
+    }
   }
 
-  // 发送到后端
-  const r = await sfetch(API.config, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ content: formatted })
-  })
 
-  if (r.ok) {
-    showToast(r.payload?.message || '保存成功', 'success')
-    _cachedSubStoreConfig = null
-    cachedConfigPayload   = null
-  } else {
-    showToast('保存失败: ' + (r.payload?.error || '未知错误'), 'error')
+  async function saveConfigWithValidation() {
+    if (!sessionKey) return
+    let formatted
+    try {
+      if (editorMode === 'form') {
+        const doc = window.YAML.parseDocument(_rawConfigYaml || '')
+        if (doc.errors?.length)
+          return showToast('原始配置 YAML 解析错误：' + doc.errors[0].message, 'error', 5000)
+        for (const [k, v] of Object.entries(collectConfigForm())) doc.set(k, v)
+        formatted = doc.toString({ lineWidth: 0 })
+        _rawConfigYaml = formatted
+
+      } else {
+        if (!codeMirrorView) return
+        const raw = codeMirrorView.state.doc.toString()
+        const doc = window.YAML.parseDocument(raw)
+        if (doc.errors?.length)
+          return showToast('YAML 语法错误：' + doc.errors[0].message, 'error', 5000)
+        formatted = doc.toString({ lineWidth: 0 })
+        setEditorContent(formatted)
+        _rawConfigYaml = formatted
+
+        // YAML 保存后立即同步表单数据
+        try { renderConfigForm(window.YAML.parse(formatted)) }
+        catch (e) { console.warn('保存后同步表单失败:', e) }
+      }
+    } catch (e) {
+      return showToast('校验失败：' + e.message, 'error')
+    }
+
+    const r = await sfetch(API.config, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: formatted })
+    })
+    if (r.ok) {
+      showToast(r.payload?.message || '保存成功', 'success')
+      _cachedSubStoreConfig = null
+      cachedConfigPayload = null
+    } else {
+      showToast('保存失败: ' + (r.payload?.error || '未知错误'), 'error')
+    }
   }
-}
 
   // ==================== 其他辅助 ====================
 
@@ -2555,11 +2536,6 @@ import { initConfigForm, renderConfigForm, collectConfigForm } from './config-fo
       showToast('已开始下载日志', 'success')
     })
 
-    // 视图切换按钮
-  document.getElementById('toggleEditorMode')
-    ?.addEventListener('click', () => {
-      switchEditorMode(editorMode === 'form' ? 'yaml' : 'form')
-    })
     const logoutHandler = () => {
       if (confirm('确定退出？')) doLogout()
     }
@@ -2816,6 +2792,13 @@ import { initConfigForm, renderConfigForm, collectConfigForm } from './config-fo
         document.getElementById('shareMenu').classList.remove('active')
       })
     })
+
+    // 配置编辑器表单模式和编辑器模式切换
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.cfg-mode-btn[data-mode]')
+      if (btn) switchEditorMode(btn.dataset.mode)
+    })
+
   }
 
   async function loadAll() {
@@ -2863,7 +2846,7 @@ import { initConfigForm, renderConfigForm, collectConfigForm } from './config-fo
       stopPollers()
       if (codeMirrorView) codeMirrorView.destroy()
     })
-    // 页面加载后调用一次（DOMContentLoaded 或 init 函数里）
+    // 页面加载后调用一次
     initConfigForm()
     switchEditorMode('form')   // 确保初始状态正确（搜索按钮隐藏等）
   })()
