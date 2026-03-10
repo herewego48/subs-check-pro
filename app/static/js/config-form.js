@@ -724,7 +724,7 @@ export function initConfigForm() {
   }
 
   /* ── Tab 点击 ─────────────────────────────────────────── */
-  function activateTab(id) {
+function activateTab(id) {
     if (!_built.has(id)) buildPanel(id);
 
     if (!_splitOn || !_canSplit()) {
@@ -738,8 +738,15 @@ export function initConfigForm() {
     const isRight = id === _rightTab;
 
     if (isLeft || isRight) {
-      if (isLeft) { _leftTab = null; _pendingSlot = 'left'; }
-      else { _rightTab = null; _pendingSlot = 'right'; }
+      if (isLeft) {
+        // 左槽被清空：将右槽提升到左槽，右槽等待填入
+        _leftTab = _rightTab;
+        _rightTab = null;
+        _pendingSlot = 'right';
+      } else {
+        _rightTab = null;
+        _pendingSlot = 'right';
+      }
     } else {
       const slot = _pendingSlot
         ?? (_leftTab === null ? 'left' : null)
