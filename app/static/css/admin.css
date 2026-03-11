@@ -40,7 +40,7 @@
   --glass-shadow: 0 6px 18px rgba(2, 6, 23, 0.06);
   --glass-blur: 10px;
 
-  --header-height: 70px;
+  --header-height: 60px;
   --mid-progressCard-height: 76px;
   --mobile-subtract: 240px;
   --gap: 8px;
@@ -164,8 +164,8 @@ header {
 }
 
 .logo {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 6px;
   overflow: hidden;
 }
@@ -189,7 +189,7 @@ header {
 
 .project-name {
   margin: 0;
-  font-size: 22px;
+  font-size: 18px;
   color: var(--accent);
   line-height: 1.2;
   display: inline-block;
@@ -198,7 +198,7 @@ header {
 .slogan {
   font-weight: normal;
   color: var(--fg);
-  font-size: 14px;
+  font-size: 11.5px;
   opacity: 0.8;
   width: 100%;
   /* 与 project-name 保持一致宽度 */
@@ -326,7 +326,7 @@ main {
   gap: var(--gap);
   min-height: 0;
   height: 100%;
-  grid-template-columns: minmax(200px, max-content) minmax(300px, 1fr) minmax(
+  grid-template-columns: minmax(170px, max-content) minmax(300px, 1fr) minmax(
       300px,
       1fr
     );
