@@ -369,10 +369,11 @@ const VALUE_TRANSFORM = {
 const SPECIAL_INPUT_VALUES = {
   'speed-test-url': [
     { value: 'random', label: '随机测速', hint: '从内置地址列表随机选择测速目标' },
+    { value: '', label: '关闭测速', hint: '不进行下载测速，仅对代理节点测活' },
   ],
   'system-proxy': [
     { value: 'direct', label: '直连', hint: '强制直连，不使用任何系统代理' },
-    { value: '', label: '自动', hint: '留空则自动检测系统代理' }, 
+    { value: '', label: '自动', hint: '自动检测系统代理' },
   ],
 };
 
@@ -549,7 +550,7 @@ function mkInput(field, value) {
   inp.addEventListener('input', checkSpecial);
   requestAnimationFrame(checkSpecial);
 
-  return inp;
+  return wrap;
 }
 
 function mkNumber(field, value) {
@@ -1013,7 +1014,7 @@ function _bindCronInterval(panel) {
         : `${_SVG_CLOCK}<span>定时计划未配置 · 检测间隔生效</span>`;
 
       if (cronInput.dataset.pausedValue)
-      intervalControls.forEach(c => { c.disabled = false; });
+        intervalControls.forEach(c => { c.disabled = false; });
       intervalRow.classList.remove('cfg-field--muted');
     }
   }
