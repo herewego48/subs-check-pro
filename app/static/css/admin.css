@@ -1201,166 +1201,201 @@ main {
   transition: transform 0.3s ease;
   color: var(--muted);
 }
-
-/* 内容包装器：负责高度动画 */
+/* ── content-wrapper ── */
 .summary-content-wrapper {
-  max-height: 700px;
+  max-height: calc(100dvh - 200px);
   overflow: hidden;
   transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
   opacity: 1;
 }
 
-/* 折叠态 */
-.analysis-feather-tip.collapsed .summary-content-wrapper {
-  max-height: 0;
-  opacity: 0;
+/* 中小屏放开外层限制，内容自然撑开 */
+@media (max-width: 899px) {
+  .summary-content-wrapper {
+    max-height: none;
+    overflow: visible;
+  }
 }
 
-.analysis-feather-tip.collapsed .icon-chevron {
-  transform: rotate(-90deg);
+/* ── 胶囊分组 ── */
+.smr-group {
+  padding: 7px 16px 4px;
 }
 
-/* ── 文字摘要区 ── */
-.tip-content {
-  border-top: 1px solid var(--border);
-  padding: 10px 16px 8px;
+.smr-group-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+/* ── 胶囊行 ── */
+.smr-chip-row {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding-bottom: 6px;
 }
 
-.summary-line {
-  display: inline-block;
-  align-items: left;
-  flex-wrap: wrap;
+/* ── 单个胶囊 ── */
+.smr-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 99px;
+  overflow: hidden;
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+}
+
+.smr-chip-label {
+  padding: 3px 4px 3px 8px;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.smr-chip-val {
+  padding: 3px 8px 3px 3px;
+  font-weight: 700;
   color: var(--fg);
 }
 
-.sep-pipe {
-  color: var(--calculating);
-  padding: 0 6px;
-  font-weight: 300;
-  font-size: 10px;
+.smr-chip-unlock {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
-.sub-label {
-  color: var(--muted);
-  font-weight: 500;
-}
-
-.kv {
-  color: var(--muted);
-}
-.kv b {
+.smr-chip-unlock .smr-chip-label {
   color: var(--accent);
-  font-weight: 500;
-}
-.b-data {
-  color: var(--accent);
-  padding: 0 6px;
 }
 
-.muted-list {
-  display: inline;
-  color: var(--muted);
-  font-size: 11px;
-  margin-left: 4px;
-  opacity: 0.6;
-}
-
-.tag-list {
-  white-space: nowrap;
-  padding: 0 4px;
-}
-.tag-location {
-  color: rgb(238, 44, 0);
-}
-.tag-type {
-  color: rgb(232, 106, 2);
-}
-.tag-media {
-  color: rgb(2, 118, 233);
-}
-.tag-ai {
-  color: rgb(0, 233, 113);
-}
-
-/* ── 地图 + 协议双列网格 ── */
+/* ── smr-grid：地图 + 协议容器 ── */
 .smr-grid {
-  display: flex;
-  flex-direction: column;
   border-top: 1px solid var(--border);
   margin-top: 2px;
 }
 
-/* section 之间统一加分隔线 */
 .smr-section + .smr-section {
   border-top: 1px solid var(--border);
 }
 
-/* ── 各 section 统一内边距 ── */
 .smr-section {
-  padding: 10px 16px;
+  padding: 0 16px;
   min-width: 0;
 }
 
+/* ── 子区块标题行 ── */
+.smr-sub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
 .smr-section-title {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--accent);
-  margin-bottom: 8px;
-  opacity: 0.6;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  opacity: 0.85;
+  transition: opacity 0.15s, color 0.15s;
+  margin: 0;
+}
+
+.smr-sub-header:hover .smr-section-title {
+  opacity: 1;
+  color: var(--fg);
+}
+
+.smr-sub-chevron {
+  width: 13px;
+  height: 13px;
+  color: var(--muted);
+  flex-shrink: 0;
+  transform: rotate(-90deg);
+  transition: transform 0.25s ease;
+  opacity: 0.5;
+}
+
+.smr-section.smr-sub-open .smr-sub-chevron {
+  transform: rotate(0deg);
+  opacity: 0.9;
+}
+
+/* ── 子区块内容体折叠动画 ── */
+.smr-sub-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 大屏：地图160 + 色条+标签60 + padding ≈ 240；协议统计52 + donut96 + 色条20 + padding ≈ 200 */
+.smr-section.smr-sub-open .smr-sub-body {
+  max-height: 320px;
+  padding-bottom: 10px;
+}
+
+/* 中屏：地图高度增加，放开限制让内容自然撑开 */
+@media (max-width: 899px) {
+  .smr-section.smr-sub-open .smr-sub-body {
+    max-height: none;
+    overflow: visible;
+  }
 }
 
 /* ── 迷你地图 ── */
 .smr-map-slot {
   width: 100%;
   aspect-ratio: 16 / 5;
-  max-height: 180px;
+  max-height: 160px;
   border-radius: 7px;
   overflow: hidden;
   background: #060d1a;
   position: relative;
 }
 
-/* 小屏：稍高 */
-@media (max-width: 559px) {
+/* 中屏：侧边栏折叠后主区域变宽，地图适度加高 */
+@media (max-width: 899px) {
   .smr-map-slot {
     aspect-ratio: 16 / 7;
-    max-height: 200px;
+    max-height: none;
   }
 }
 
-/* 小屏单列：更高，沉浸感更强 */
-@media (max-width: 559px) {
+/* 小屏 */
+@media (max-width: 576px) {
   .smr-map-slot {
     aspect-ratio: 16 / 8;
-    max-height: 220px;
   }
 }
 
-/* ── 大区色条 & 标签（地图下方）── */
+/* ── 大区色条 ── */
 .smr-region-bar {
   display: flex;
-  height: 3px;
+  height: 4px;
   border-radius: 99px;
   overflow: hidden;
   gap: 1px;
-  margin-top: 8px;
+  margin-top: 7px;
 }
 
 .smr-region-seg {
   height: 100%;
   border-radius: 1px;
-  transition: flex 0.4s ease;
 }
 
 .smr-region-labels {
   display: flex;
   flex-wrap: wrap;
-  gap: 3px 8px;
+  gap: 4px 10px;
   margin-top: 6px;
 }
 
@@ -1369,7 +1404,6 @@ main {
   align-items: center;
   gap: 3px;
   font-size: 10px;
-  color: var(--muted);
   white-space: nowrap;
 }
 
@@ -1379,7 +1413,6 @@ main {
   border-radius: 2px;
   flex-shrink: 0;
 }
-
 .smr-region-name {
   font-weight: 600;
   color: var(--fg);
@@ -1389,16 +1422,16 @@ main {
   color: var(--fg);
 }
 .smr-region-pct {
-  color: var(--muted);
   font-size: 9px;
+  color: var(--muted);
 }
 
-/* ── 协议统计行 ── */
+/* ── 迷你协议统计行 ── */
 .smr-proto-stat-row {
   display: flex;
   border-radius: 6px;
-  background: color-mix(in srgb, var(--border) 30%, transparent);
-  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--fg) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
   margin-bottom: 8px;
   overflow: hidden;
 }
@@ -1410,7 +1443,7 @@ main {
   gap: 2px;
   padding: 6px 8px;
   min-width: 0;
-  border-right: 1px solid var(--border);
+  border-right: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
 }
 
 .smr-proto-stat-item:last-child {
@@ -1434,7 +1467,7 @@ main {
   white-space: nowrap;
 }
 
-/* ── 协议 donut + 列表 ── */
+/* ── 迷你协议列表 ── */
 .smr-proto-wrap {
   display: flex;
   align-items: center;
@@ -1453,7 +1486,7 @@ main {
   flex-direction: column;
   gap: 4px;
   min-width: 0;
-  max-height: 96px;
+  /* 大屏受 smr-sub-body max-height 约束，无需重复限制 */
   overflow: hidden;
 }
 
@@ -1462,14 +1495,12 @@ main {
   align-items: center;
   gap: 5px;
 }
-
 .smr-proto-dot {
   width: 6px;
   height: 6px;
   border-radius: 2px;
   flex-shrink: 0;
 }
-
 .smr-proto-name {
   font-size: 9px;
   font-weight: 700;
@@ -1480,7 +1511,7 @@ main {
 .smr-proto-bar-wrap {
   flex: 1;
   height: 4px;
-  background: var(--border);
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
   border-radius: 99px;
   overflow: hidden;
 }
@@ -1499,7 +1530,6 @@ main {
   flex-shrink: 0;
 }
 
-/* 堆叠色条 */
 .smr-stack-bar {
   display: flex;
   height: 4px;
@@ -1509,7 +1539,7 @@ main {
   margin-top: 8px;
 }
 
-/* 完整报告按钮 */
+/* ── 完整报告按钮 ── */
 .summary-analysis-btn {
   display: flex;
   align-items: center;
@@ -1526,7 +1556,7 @@ main {
 }
 
 .summary-analysis-btn svg {
-  opacity: 0.55;
+  opacity: 0.5;
   transition: opacity 0.15s;
 }
 
@@ -1539,16 +1569,15 @@ main {
   opacity: 1;
 }
 
-/* ==================== 折叠状态 (Collapsed) ==================== */
-
+/* ── 折叠状态 ── */
 .analysis-feather-tip.collapsed .summary-content-wrapper {
   max-height: 0;
+  overflow: hidden;
   opacity: 0;
 }
 
 .analysis-feather-tip.collapsed .icon-chevron {
   transform: rotate(-90deg);
-  /* 箭头指向左侧/下方 */
 }
 
 /* 移动端微调 */

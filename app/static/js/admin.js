@@ -67,7 +67,7 @@ import { initQuickPreview } from './cfg-quickpreview.js';
     logoutBtn: $('#logoutBtn'),
     logoutBtnMobile: $('#btnlogoutMobile'),
     openEditorBtn: $('#openEditor'),
-    themeToggleBtn: $('#themeToggle'),
+    themeToggleBtn: $('#mainThemeToggle'),
     iconMoon: $('#iconMoon'),
     iconSun: $('#iconSun'),
     projectMenu: $('#projectMenu'),
@@ -1435,106 +1435,105 @@ import { initQuickPreview } from './cfg-quickpreview.js';
       return;
     }
 
-    // ── 基础数据 ─────────────────────────────────────────────────
-    const geoKeys = Object.keys(global.geography_distribution || {});
-    const protoKeys = Object.keys(global.protocol_distribution || {});
+    // ── 基础数据 ──────────────────────────────────────────────────
     const cfVal = parseFloat(global.quality_metrics?.cf_consistent_ratio || 0);
-    const vpsVal = 100 - cfVal;
-    const lineFeature = cfVal > 70 ? "以 Cloudflare 中转为主"
-      : vpsVal > 50 ? "以 VPS 直连为主"
-        : "线路分布多样";
+    const vpsVal = parseFloat((100 - cfVal).toFixed(1));
+    const qm = global.quality_metrics || {};
+    const cfd = qm.cf_details || {};
+    const cfCon = cfd['consistent_¹⁺'] || {};
+    const cfConTotal = Object.values(cfCon).reduce((a, b) => a + b, 0);
+    let vpsObj = {};
+    for (const [k, v] of Object.entries(qm)) {
+      if (k.startsWith('vps_details') && typeof v === 'object') { vpsObj = v; break; }
+    }
+    const vpsTotal = Object.values(vpsObj).reduce((a, b) => a + b, 0);
+    const aliveCount = global.alive_count || 0;
+    const geoCount = Object.keys(global.geography_distribution || {}).length;
+    const protoCount = Object.keys(global.protocol_distribution || {}).length;
+    const checked = parseCount(info.check_count_raw);
+    const passRate = checked > 0 ? Math.min(100, aliveCount / checked * 100) : 0;
 
+    // 解锁解析
     const mediaRaw = rawSummary.match(/流媒体解锁: \[(.*?)\]/)?.[1] || "";
     const aiRaw = rawSummary.match(/AI 解锁\[(.*?)\]/)?.[1] || "";
+    const parseUnlock = raw => raw
+      ? raw.split(',').map(s => s.trim()).filter(Boolean)
+        .map(item => { const [name, count] = item.split(':').map(s => s.trim()); return name && count ? { name, count } : null; })
+        .filter(Boolean)
+      : [];
+    const mediaList = parseUnlock(mediaRaw);
+    const aiList = parseUnlock(aiRaw);
 
-    // ── 样式辅助 ─────────────────────────────────────────────────
-    const tagWrap = (cls, text) =>
-      `<span style="white-space:nowrap;display:inline-block;">[ <span class="${cls} tag-list">${text}</span> ]</span>`;
-    const labelTagBond = (label, tagHtml) =>
-      `<span style="white-space:nowrap;display:inline-block;vertical-align:baseline;">
-       <span class="sub-label">${label}</span>${tagHtml}
+    // ── 胶囊辅助 ──────────────────────────────────────────────────
+    const chip = (label, value, colorVar = '--fg') =>
+      `<span class="smr-chip">
+       <span class="smr-chip-label">${label}</span>
+       <span class="smr-chip-val" style="color:var(${colorVar})">${value}</span>
      </span>`;
-    const listSpan = text =>
-      `<span class="muted-list" style="display:inline !important;white-space:normal;margin-left:4px;">${text}</span>`;
+    const unlockChip = (name, count, colorVar = '--idle') =>
+      `<span class="smr-chip smr-chip-unlock">
+       <span class="smr-chip-label">${name}</span>
+       <span class="smr-chip-val" style="color:var(${colorVar})">${count}</span>
+     </span>`;
 
-    // ── 覆盖行 ───────────────────────────────────────────────────
-    let coverageRow = "";
-    const hasGeo = geoKeys.length > 0, hasProto = protoKeys.length > 0;
-    if (hasGeo || hasProto) {
-      let content = "";
-      if (hasGeo) {
-        content += labelTagBond('覆盖：', tagWrap('tag-location', '地区'));
-        content += listSpan(geoKeys.join(', '));
-      }
-      if (hasGeo && hasProto) {
-        content += ` <span style="white-space:nowrap;"><span class="sep-pipe">|</span> ${tagWrap('tag-type', '协议')}</span>`;
-        content += listSpan(protoKeys.join(', '));
-      } else if (hasProto) {
-        content += labelTagBond('覆盖：', tagWrap('tag-type', '协议'));
-        content += listSpan(protoKeys.join(', '));
-      }
-      coverageRow = `<div class="summary-line" style="display:block;">${content}</div>`;
-    }
+    // ── 胶囊行 ────────────────────────────────────────────────────
+    // 行1：检测参数
+    const passColor = passRate >= 5 ? '--success' : passRate > 0 ? '--warning' : '--danger';
+    const row1 = `<div class="smr-chip-row">
+    ${chip('检测', info.check_count_raw || '-', '--muted')}
+    ${chip('可用', aliveCount, '--success')}
+    ${chip('通过率', fmtRate(passRate), passColor)}
+    ${info.check_min_speed > 0
+        ? chip('测速下限', info.check_min_speed + ' KB/s', '--accent')
+        : chip('模式', '仅测活', '--muted')}
+    ${chip('流量', info.check_traffic || '-', '--accent')}
+    ${chip('耗时', info.check_duration || '-', '--idle')}
+  </div>`;
 
-    // ── 解锁行 ───────────────────────────────────────────────────
-    let unlockDetailsRow = "";
-    const hasMedia = !!mediaRaw, hasAI = !!aiRaw;
-    if (hasMedia || hasAI) {
-      let content = "";
-      if (hasMedia) {
-        content += labelTagBond('解锁：', tagWrap('tag-media', '媒体'));
-        content += listSpan(mediaRaw);
-      }
-      if (hasMedia && hasAI) {
-        content += ` <span style="white-space:nowrap;"><span class="sep-pipe">|</span> ${tagWrap('tag-ai', 'AI')}</span>`;
-        content += listSpan(aiRaw);
-      } else if (hasAI) {
-        content += labelTagBond('解锁：', tagWrap('tag-ai', 'AI'));
-        content += listSpan(aiRaw);
-      }
-      unlockDetailsRow = `<div class="summary-features">
-      <div class="summary-line" style="display:block;margin-top:4px;">${content}</div>
-    </div>`;
-    }
+    // 行2：节点分布
+    const row2 = `<div class="smr-chip-row">
+    ${chip('地区', geoCount, '--idle')}
+    ${chip('协议', protoCount, '--warning')}
+    ${chip('CF中转', cfVal.toFixed(1) + '%' + (cfConTotal ? ' · ' + cfConTotal : ''), '--success')}
+    ${chip('VPS', vpsVal.toFixed(1) + '%' + (vpsTotal ? ' · ' + vpsTotal : ''), '--idle')}
+  </div>`;
 
-    const speedtestConfigRow = info.check_min_speed > 0
-      ? `<span class="kv">测速下限 <b>${info.check_min_speed}</b> KB/s</span>`
-      : `<span class="sub-label">仅测活</span>`;
+    const unlockChips = [
+      ...mediaList.map(u => unlockChip(u.name, u.count, '--idle')),
+      ...aiList.map(u => unlockChip(u.name, u.count, '--success')),
+    ].join('');
+    const row3 = unlockChips
+      ? `<div class="smr-group"><div class="smr-group-title">解锁状态</div><div class="smr-chip-row">${unlockChips}</div></div>`
+      : '';
 
-    // ── 迷你协议总览 ─────────────────────────────────────────────
+    // ── CHEVRON ───────────────────────────────────────────────────
+    const CHEVRON_SVG = `<svg class="smr-sub-chevron" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="6 9 12 15 18 9"/>
+  </svg>`;
+
+    // ── 迷你协议总览 ──────────────────────────────────────────────
     const protoData = global.protocol_distribution || {};
-    const aliveCount = global.alive_count || 0;
     const protoEntries = Object.entries(protoData).sort((a, b) => b[1] - a[1]);
 
     let miniProtoHTML = '';
     if (protoEntries.length && typeof buildDonutSVG === 'function') {
-      // 统计行（对应 protoStatRow）
       const top1 = protoEntries[0], top2 = protoEntries[1];
       const statItems = [
         { val: aliveCount, label: '节点总量' },
         { val: protoEntries.length, label: '协议种类' },
-        top1 ? {
-          val: top1[0].toUpperCase(),
-          label: `主力 ${Math.round(top1[1] / Math.max(1, aliveCount) * 100)}%`,
-          color: getProtoColor(top1[0])
-        } : null,
-        top2 ? {
-          val: top2[0].toUpperCase(),
-          label: `次要 ${Math.round(top2[1] / Math.max(1, aliveCount) * 100)}%`,
-          color: getProtoColor(top2[0])
-        } : null,
+        top1 ? { val: top1[0].toUpperCase(), label: `主力 ${Math.round(top1[1] / Math.max(1, aliveCount) * 100)}%`, color: getProtoColor(top1[0]) } : null,
+        top2 ? { val: top2[0].toUpperCase(), label: `次要 ${Math.round(top2[1] / Math.max(1, aliveCount) * 100)}%`, color: getProtoColor(top2[0]) } : null,
       ].filter(Boolean);
 
-      const miniProtoStatRow = `
-      <div class="smr-proto-stat-row">
-        ${statItems.map(s => `
-          <div class="smr-proto-stat-item">
-            <div class="smr-proto-stat-val"${s.color ? ` style="color:${s.color}"` : ''}>${s.val}</div>
-            <div class="smr-proto-stat-label">${s.label}</div>
-          </div>`).join('')}
-      </div>`;
+      const miniProtoStatRow = `<div class="smr-proto-stat-row">
+      ${statItems.map(s => `
+        <div class="smr-proto-stat-item">
+          <div class="smr-proto-stat-val"${s.color ? ` style="color:${s.color}"` : ''}>${s.val}</div>
+          <div class="smr-proto-stat-label">${s.label}</div>
+        </div>`).join('')}
+    </div>`;
 
-      // Donut + 列表
       const donutSVG = buildDonutSVG(protoEntries, aliveCount, 72);
       const donutList = protoEntries.map(([k, v]) => {
         const pct = Math.round(v / Math.max(1, aliveCount) * 100);
@@ -1542,39 +1541,35 @@ import { initQuickPreview } from './cfg-quickpreview.js';
         return `<div class="smr-proto-row">
         <span class="smr-proto-dot"  style="background:${color}"></span>
         <span class="smr-proto-name" style="color:${color}">${k.toUpperCase()}</span>
-        <div class="smr-proto-bar-wrap">
-          <div class="smr-proto-bar" style="width:${pct}%;background:${color}"></div>
-        </div>
+        <div class="smr-proto-bar-wrap"><div class="smr-proto-bar" style="width:${pct}%;background:${color}"></div></div>
         <span class="smr-proto-pct">${pct}%</span>
       </div>`;
       }).join('');
 
       const stackBar = protoEntries.map(([k, v]) =>
-        `<div style="flex:${Math.max(2, Math.round(v / Math.max(1, aliveCount) * 100))};
-        background:${getProtoColor(k)};height:100%;border-radius:1px;"
-        title="${k}: ${v}"></div>`
+        `<div style="flex:${Math.max(2, Math.round(v / Math.max(1, aliveCount) * 100))};background:${getProtoColor(k)};height:100%;border-radius:1px;" title="${k}:${v}"></div>`
       ).join('');
 
       miniProtoHTML = `
-      <div class="smr-section">
-        <div class="smr-section-title">协议总览</div>
-        ${miniProtoStatRow}
-        <div class="smr-proto-wrap">
-          ${donutSVG}
-          <div class="smr-proto-list">${donutList}</div>
+      <div class="smr-section" id="smr-proto-section">
+        <div class="smr-sub-header">
+          <span class="smr-section-title">协议总览</span>
+          ${CHEVRON_SVG}
         </div>
-        <div class="smr-stack-bar">${stackBar}</div>
+        <div class="smr-sub-body">
+          ${miniProtoStatRow}
+          <div class="smr-proto-wrap">${donutSVG}<div class="smr-proto-list">${donutList}</div></div>
+          <div class="smr-stack-bar">${stackBar}</div>
+        </div>
       </div>`;
     }
 
-    // ── 迷你地图 + 大区分布 ──────────────────────────────────────
+    // ── 迷你地图 + 大区分布 ───────────────────────────────────────
     const geoEntries = Object.entries(global.geography_distribution || {})
       .sort((a, b) => b[1] - a[1]);
 
     let miniMapHTML = '';
     if (geoEntries.length && typeof GeoFlightMap !== 'undefined') {
-
-      // 大区汇总
       const geoTotal = geoEntries.reduce((s, [, v]) => s + v, 0) || 1;
       const regionMap = {};
       for (const [code, count] of geoEntries) {
@@ -1583,41 +1578,43 @@ import { initQuickPreview } from './cfg-quickpreview.js';
       }
       const regionEntries = Object.entries(regionMap).sort((a, b) => b[1] - a[1]);
 
-      // 色条
       const regionBar = regionEntries.map(([r, v]) =>
         `<div class="smr-region-seg"
-            style="flex:${Math.max(1, v)};background:${(typeof REGION_COLORS !== 'undefined' && REGION_COLORS[r]) || '#64748b'}"
-            title="${r}: ${v}"></div>`
+        style="flex:${Math.max(1, v)};background:${(typeof REGION_COLORS !== 'undefined' && REGION_COLORS[r]) || '#64748b'}"
+        title="${r}: ${v}"></div>`
       ).join('');
 
-      // 文字标签
       const regionLabels = regionEntries.map(([r, v]) => {
         const color = (typeof REGION_COLORS !== 'undefined' && REGION_COLORS[r]) || '#64748b';
-        const pct = Math.round(v / geoTotal * 100);
         return `<span class="smr-region-item">
         <span class="smr-region-dot" style="background:${color}"></span>
         <span class="smr-region-name">${r}</span>
         <span class="smr-region-val">${v}</span>
-        <span class="smr-region-pct">${pct}%</span>
+        <span class="smr-region-pct">${Math.round(v / geoTotal * 100)}%</span>
       </span>`;
       }).join('');
 
       miniMapHTML = `
-      <div class="smr-section">
-        <div class="smr-section-title">地理分布</div>
-        <div class="smr-map-slot" id="summaryMiniMapSlot"></div>
-        <div class="smr-region-bar">${regionBar}</div>
-        <div class="smr-region-labels">${regionLabels}</div>
+      <div class="smr-section" id="smr-geo-section">
+        <div class="smr-sub-header">
+          <span class="smr-section-title">地理分布</span>
+          ${CHEVRON_SVG}
+        </div>
+        <div class="smr-sub-body">
+          <div class="smr-map-slot" id="summaryMiniMapSlot"></div>
+          <div class="smr-region-bar">${regionBar}</div>
+          <div class="smr-region-labels">${regionLabels}</div>
+        </div>
       </div>`;
     }
 
     const miniGridHTML = (miniMapHTML || miniProtoHTML) ? `
-      <div class="smr-grid">
-        ${miniMapHTML}
-        ${miniProtoHTML}
-      </div>` : '';
+    <div class="smr-grid">
+      ${miniMapHTML}
+      ${miniProtoHTML}
+    </div>` : '';
 
-    // ── 注入 HTML ────────────────────────────────────────────────
+    // ── 注入 HTML ─────────────────────────────────────────────────
     summaryCard.innerHTML = `
     <div class="summary-toggle-header" id="summaryToggleBtn">
       <div class="summary-title">
@@ -1638,21 +1635,15 @@ import { initQuickPreview } from './cfg-quickpreview.js';
 
     <div class="summary-content-wrapper">
       <div class="tip-content">
-        <div class="summary-line">
-          <span class="sub-label">${info.check_time || '-'}</span>
-          <span class="sep-pipe">|</span>
-          ${speedtestConfigRow}
-          <span class="sep-pipe">|</span>
-          <span class="kv">消耗流量 <b>${info.check_traffic || '-'}</b></span>
+        <div class="smr-group">
+          <div class="smr-group-title">检测参数</div>
+          ${row1}
         </div>
-        <div class="summary-line">
-          <span class="sub-label">${lineFeature}：</span>
-          <span class="kv">CF <b>${cfVal.toFixed(1)}%</b></span>
-          <span class="sep-pipe">|</span>
-          <span class="kv">VPS <b>${vpsVal.toFixed(1)}%</b></span>
+        <div class="smr-group">
+          <div class="smr-group-title">节点分布</div>
+          ${row2}
         </div>
-        ${coverageRow}
-        ${unlockDetailsRow}
+        ${row3}
       </div>
 
       ${miniGridHTML}
@@ -1670,32 +1661,37 @@ import { initQuickPreview } from './cfg-quickpreview.js';
     </div>
   `;
 
-    // ── 折叠交互 ─────────────────────────────────────────────────
+    // ── 折叠交互 ──────────────────────────────────────────────────
     const toggleBtn = summaryCard.querySelector('#summaryToggleBtn');
     if (toggleBtn) {
-      toggleBtn.onclick = e => {
-        e.stopPropagation();
-        const wasCollapsed = summaryCard.classList.contains('collapsed');
-        summaryCard.classList.toggle('collapsed');
-        // 展开时重置地图动画起点
-        if (wasCollapsed && _summaryMapInstance) _summaryMapInstance.t0 = null;
-      };
-    }
-    if (!summaryCard.classList.contains('collapsed')) {
-      summaryCard.classList.add('collapsed');
+      toggleBtn.onclick = e => { e.stopPropagation(); summaryCard.classList.toggle('collapsed'); };
     }
 
-    // ── 初始化迷你地图（传入可见性函数，绕过 tab-geo 检查）────────
+    summaryCard.querySelectorAll('.smr-sub-header').forEach(hdr => {
+      hdr.addEventListener('click', e => {
+        e.stopPropagation();
+        const section = hdr.closest('.smr-section');
+        const isOpening = !section.classList.contains('smr-sub-open');
+        section.classList.toggle('smr-sub-open');
+        if (section.id === 'smr-geo-section' && isOpening && _summaryMapInstance) {
+          _summaryMapInstance.t0 = null;
+        }
+      });
+    });
+
+    if (!summaryCard.classList.contains('collapsed')) summaryCard.classList.add('collapsed');
+
+    // ── 初始化迷你地图 ─────────────────────────────────────────────
     if (typeof GeoFlightMap !== 'undefined' && geoEntries.length) {
       const mapSlot = summaryCard.querySelector('#summaryMiniMapSlot');
       if (mapSlot) {
-        const origin = typeof guessOrigin === 'function'
-          ? guessOrigin() : { lon: 116.4, lat: 39.9 };
-
-        // 可见性：摘要卡片存在且处于展开状态
-        const visibilityFn = () =>
-          !!summaryCard.isConnected && !summaryCard.classList.contains('collapsed');
-
+        const origin = typeof guessOrigin === 'function' ? guessOrigin() : { lon: 116.4, lat: 39.9 };
+        const visibilityFn = () => {
+          const geoSection = summaryCard.querySelector('#smr-geo-section');
+          return !!summaryCard.isConnected
+            && !summaryCard.classList.contains('collapsed')
+            && !!geoSection?.classList.contains('smr-sub-open');
+        };
         requestAnimationFrame(() => {
           _summaryMapInstance = new GeoFlightMap(mapSlot, geoEntries, origin, visibilityFn);
         });
@@ -1704,7 +1700,6 @@ import { initQuickPreview } from './cfg-quickpreview.js';
 
     summaryCard.style.display = (actionState === 'idle') ? 'flex' : 'none';
   }
-
   /**
    *隐藏上次检测结果
    *
