@@ -3,7 +3,7 @@
   --bg: #ffffff;
   --fg: #111;
   --card: #fff;
-  --card-shadow:#8e8e8e;
+  --card-shadow: #8e8e8e;
   --border: rgba(0, 0, 0, 0.06);
   --accent: #0ea5a0;
   --accent-light: rgba(14, 165, 160, 0.6);
@@ -21,7 +21,7 @@
 
   /* 密码输入框背景 */
   --input-bg: rgba(236, 232, 224, 0.2);
-  --bg-hover:  rgba(236, 232, 224, 0.6);
+  --bg-hover: rgba(236, 232, 224, 0.6);
 
   /* --logs-bg: rgba(236, 232, 224, 0.2); */
   --logs-bg: white;
@@ -65,7 +65,7 @@
   --bg: #121316;
   --fg: #e6e6e6;
   --card: #18191b;
-  --card-shadow:#001817;
+  --card-shadow: #001817;
   --border: rgba(255, 255, 255, 0.06);
   --accent: #0ea5a0;
   --accent-light: rgba(14, 165, 160, 0.6);
@@ -1325,9 +1325,9 @@ main {
   margin: 0;
 }
 
-.smr-sub-header:hover .smr-section-title {
+.smr-sub-header:hover * {
+  color: var(--accent);
   opacity: 1;
-  color: var(--fg);
 }
 
 .smr-sub-chevron {
@@ -1590,6 +1590,30 @@ main {
   max-height: 0;
   overflow: hidden;
   opacity: 0;
+}
+
+.analysis-feather-tip:not(.collapsed) .tip-content {
+  padding-top: 6px;
+}
+
+.analysis-feather-tip.collapsed .summary-toggle-header {
+  background-color: color-mix(in srgb, var(--bg-hover) 40%, transparent) ; /* 展开时背景色 */
+  border-bottom: 1px solid var(--bg-hover);
+}
+
+.analysis-feather-tip.collapsed .summary-toggle-header:hover {
+  background-color: color-mix(in srgb, var(--bg-hover) 80%, transparent) ; /* 展开时背景色 */
+  border-bottom: 1px solid var(--bg-hover);
+}
+
+/* 展开状态（没有 collapsed 类时） */
+.analysis-feather-tip:not(.collapsed) .summary-toggle-header {
+  background-color: color-mix(in srgb, var(--bg-hover) 60%, transparent) ; /* 展开时背景色 */
+  border-bottom: 1px solid var(--bg-hover);
+}
+
+.analysis-feather-tip:not(.collapsed) .summary-toggle-header:hover {
+  background-color: var(--bg-hover);
 }
 
 .analysis-feather-tip.collapsed .icon-chevron {
