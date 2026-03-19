@@ -1,4 +1,12 @@
-/* admin-cfg-form.css  v4 */
+/* admin-cfg-form.css*/
+/* ── Cron 五段色彩变量 ── */
+:root {
+  --cron-0: #3b82f6; /* 分钟 · 蓝 */
+  --cron-1: #8b5cf6; /* 小时 · 紫 */
+  --cron-2: #10b981; /* 日期 · 青 */
+  --cron-3: #f59e0b; /* 月份 · 橙 */
+  --cron-4: #ec4899; /* 星期 · 粉 */
+}
 
 /* ════════════════════════════════════════════════════════════
    标题区
@@ -805,26 +813,48 @@
   text-decoration-thickness: 1.5px;
 }
 
-/* 五段颜色 */
+/* ── 段色（统一 11% 底色）── */
 .cfg-cron-seg-0 {
-  color: #3b82f6;
-  background: color-mix(in srgb, #3b82f6 11%, transparent);
+  color: var(--cron-0);
+  background: color-mix(in srgb, var(--cron-0) 11%, transparent);
 }
 .cfg-cron-seg-1 {
-  color: #8b5cf6;
-  background: color-mix(in srgb, #8b5cf6 11%, transparent);
+  color: var(--cron-1);
+  background: color-mix(in srgb, var(--cron-1) 11%, transparent);
 }
 .cfg-cron-seg-2 {
-  color: #10b981;
-  background: color-mix(in srgb, #10b981 11%, transparent);
+  color: var(--cron-2);
+  background: color-mix(in srgb, var(--cron-2) 11%, transparent);
 }
 .cfg-cron-seg-3 {
-  color: #f59e0b;
-  background: color-mix(in srgb, #f59e0b 11%, transparent);
+  color: var(--cron-3);
+  background: color-mix(in srgb, var(--cron-3) 11%, transparent);
 }
 .cfg-cron-seg-4 {
-  color: #ec4899;
-  background: color-mix(in srgb, #ec4899 11%, transparent);
+  color: var(--cron-4);
+  background: color-mix(in srgb, var(--cron-4) 11%, transparent);
+}
+
+/* ── 标签色（统一 9% 底色）── */
+.cfg-cron-label-0 {
+  color: color-mix(in srgb, var(--cron-0) 60%, transparent);
+  background: color-mix(in srgb, var(--cron-0) 9%, transparent);
+}
+.cfg-cron-label-1 {
+  color: color-mix(in srgb, var(--cron-1) 60%, transparent);
+  background: color-mix(in srgb, var(--cron-1) 9%, transparent);
+}
+.cfg-cron-label-2 {
+  color: color-mix(in srgb, var(--cron-2) 60%, transparent);
+  background: color-mix(in srgb, var(--cron-2) 9%, transparent);
+}
+.cfg-cron-label-3 {
+  color: color-mix(in srgb, var(--cron-3) 60%, transparent);
+  background: color-mix(in srgb, var(--cron-3) 9%, transparent);
+}
+.cfg-cron-label-4 {
+  color: color-mix(in srgb, var(--cron-4) 60%, transparent);
+  background: color-mix(in srgb, var(--cron-4) 9%, transparent);
 }
 
 /* 非法 / 部分输入（灰色原文） */
@@ -858,27 +888,6 @@
   letter-spacing: 0.04em;
   opacity: 0.7;
   white-space: nowrap;
-}
-/* 与段色对应 */
-.cfg-cron-label-0 {
-  color: #3b82f6;
-  background: color-mix(in srgb, #3b82f6 9%, transparent);
-}
-.cfg-cron-label-1 {
-  color: #8b5cf6;
-  background: color-mix(in srgb, #8b5cf6 9%, transparent);
-}
-.cfg-cron-label-2 {
-  color: #10b981;
-  background: color-mix(in srgb, #10b981 9%, transparent);
-}
-.cfg-cron-label-3 {
-  color: #f59e0b;
-  background: color-mix(in srgb, #f59e0b 9%, transparent);
-}
-.cfg-cron-label-4 {
-  color: #ec4899;
-  background: color-mix(in srgb, #ec4899 9%, transparent);
 }
 
 /* ── 真实 input（编辑模式） ── */
