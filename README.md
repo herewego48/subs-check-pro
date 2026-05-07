@@ -14,11 +14,9 @@ High-performance proxy subscription checker.
 <img alt="GitHub Release" src="https://img.shields.io/github/v/release/sinspired/SubsCheck-Win-GUI?display_name=release&style=social&logo=github&label=Windows%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2">
 </p>
 
-# 🚀 高性能代理检测工具
+# 🚀 网络代理质量检测工具
 
-> This project originated from [beck-8](https://github.com/beck-8/subs-check) but has since diverged significantly and is now maintained independently.
-
-**测活、测速、媒体解锁**，代理检测工具，支持 `100-1000` 高并发低占用运行，检测结果更准确。全新设计，适配 PC 和手机设备的现代 WebUI 配置管理界面，自动生成 `mihomo` 和 `singbox` 订阅，集成 `sub-store` 前端和后端，支持一键复制分享；支持自动无缝版本更新。
+**测活、测速、媒体解锁**，网络质量检测工具。采用全新设计，适配 PC 和手机设备的现代 WebUI 配置管理界面，自动生成 `mihomo` 和 `singbox` 订阅，集成 `sub-store` 前端和后端，支持一键复制分享，可在高并发运行时保持低内存占用；支持自动无缝版本更新。
 
 ![preview](./doc/images/Subs-Check-PRO_OG.png)
 
@@ -29,7 +27,7 @@ High-performance proxy subscription checker.
 - [x] 🎲 [智能节点乱序](https://github.com/sinspired/subs-check-pro/wiki/Features-Details)
 - [x] 🕒 [保存并加载历次可用节点](https://github.com/sinspired/subs-check-pro/wiki/Features-Details)
 - [x] 📊 [统计订阅链接总数、可用节点数量、成功率](https://github.com/sinspired/subs-check-pro/wiki/Features-Details)
-- [x] 🚦 [自动检测代理环境](https://github.com/sinspired/subs-check-pro/wiki/System-Proxy)
+- [x] 🚦 [自动检测本地代理环境](https://github.com/sinspired/subs-check-pro/wiki/System-Proxy)
 - [x] 🎁 [自动检查更新，无缝升级新版本](https://github.com/sinspired/subs-check-pro/wiki/Features-Details)
 - [x] 📦 [自动生成开箱即用的 sing-box 配置](https://github.com/sinspired/subs-check-pro/wiki/Subscriptions)
 - [x] 🔒 [优化文件分享，支持分享码](https://github.com/sinspired/subs-check-pro/wiki/File-Service)
@@ -89,7 +87,7 @@ High-performance proxy subscription checker.
 
 ![analysis](./doc/images/analysis.png)
 
-### ⚡新增分享菜单项，自动生成singbox订阅，支持一键分享
+### ⚡自动生成singbox订阅，支持一键分享
 
 |                                  |                                        |                                        |
 | -------------------------------- | -------------------------------------- | -------------------------------------- |
@@ -155,11 +153,10 @@ docker run -d \
   <summary>展开查看</summary>
   
 ```yaml
-# 新增设置项
 # 优先级 1.system-proxy;2.github-proxy;3.ghproxy-group
 # 即使未设置,也会检测常见端口(v2ray\clash)的系统代理自动设置
 
-# 系统代理设置: 适用于拉取代理、消息推送、文件上传等等。
+# 系统代理设置: 适用于拉取订阅、消息推送、文件上传等等。
 # 写法跟环境变量一样，修改需重启生效
 # system-proxy: "http://username:password@192.168.1.1:7890"
 # system-proxy: "socks5://username:password@192.168.1.1:7890"
@@ -252,14 +249,10 @@ speed-test-url: https://custom-domain/speedtest?bytes=1073741824
 ## 🤝 贡献与开发
 
 - 欢迎提交 PR 与 Issue，一起完善项目。
-- 本仓库使用 Git LFS 管理大文件（如资源与预编译产物）。
 
 ```bash
-git lfs install
 git clone https://github.com/sinspired/subs-check-pro
 cd subs-check-pro
-# 如已克隆完成后再启用 LFS，请执行：
-git lfs pull
 ```
 
 ## 🙏 鸣谢
