@@ -118,7 +118,7 @@ func parseLineBasedFormats(data []byte, subURL string) ([]map[string]any, error)
 	// ① Base64/V2Ray 标准转换
 	//    处理整体 base64 编码的订阅（不能省略，parseRawLines 无法处理 base64 blob）
 	if nodes, err := convert.ConvertsV2Ray(data); err == nil && len(nodes) > 0 {
-		patchXhttpOpts(nodes, data) // 补丁：修复 xhttp 缺失字段
+		// patchXhttpOpts(nodes, data) // 补丁：修复 xhttp 缺失字段
 		add(ToNormalizeNodes(nodes), "Base64/V2Ray")
 	}
 

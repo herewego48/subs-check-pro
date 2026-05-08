@@ -317,13 +317,13 @@ func ParseProxyLinksAndConvert(links []string, subURL string) []map[string]any {
 					nodeJSON, _ := json.Marshal(node)
 					slog.Debug("标准节点", "index", i, "node", string(nodeJSON))
 				}
-				patchXhttpOpts(nodes, data) // 补丁：修复 xhttp 缺失字段
+				// patchXhttpOpts(nodes, data) // 补丁：修复 xhttp 缺失字段
 				finalNodes = append(finalNodes, ToNormalizeNodes(nodes)...)
 			}
 			// 扩展转换 ConvertsV2RayExtra 处理非标准/扩展协议链接
 			if nodes, err := ConvertsV2RayExtra(data); err == nil && len(nodes) > 0 {
 				slog.Debug("扩展转换成功", "数量", len(nodes))
-				patchXhttpOpts(nodes, data)
+				// patchXhttpOpts(nodes, data)
 				finalNodes = append(finalNodes, ToNormalizeNodes(nodes)...)
 			}
 		}
