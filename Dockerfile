@@ -25,7 +25,11 @@ COPY --from=base-files /usr/share/zoneinfo/Asia/Shanghai   /etc/localtime
 ENV TZ=Asia/Shanghai
 ENV RUNNING_IN_DOCKER=true
 
+# 镜像描述标签
 LABEL org.opencontainers.image.description="高性能[测活、测速、媒体检测]代理检测筛选工具，支持100-1000高并发低占用运行，大幅减少数倍检测时间。"
+LABEL org.opencontainers.image.keywords="subs-check-pro,测活,测速,媒体检测,sub-store,节点管理,流媒体检测,测速节点,自动化"
+LABEL org.opencontainers.image.url="https://github.com/sinspired/subs-check-pro/doc/images/Subs-Check-PRO_OG.png"
+LABEL org.opencontainers.image.documentation="https://github.com/sinspired/subs-check-pro/wiki"
 LABEL org.opencontainers.image.source="https://github.com/sinspired/subs-check-pro"
 
 # TARGETARCH 由 buildx 自动注入: amd64 / arm64 / arm
