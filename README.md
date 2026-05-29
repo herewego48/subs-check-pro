@@ -8,15 +8,17 @@ High-performance proxy subscription checker.
 </p>
 <p align="center">
 <a href="https://github.com/sinspired/subs-check-pro/releases"><img src="https://img.shields.io/github/v/release/sinspired/subs-check-pro?logo=github&include_prereleases"/></a>
-<a href="https://hub.docker.com/r/sinspired/subs-check-pro"><img src="https://img.shields.io/docker/pulls/sinspired/subs-check?logo=docker" /></a>
+<a href="https://hub.docker.com/r/sinspired/subs-check-pro"><img src="https://img.shields.io/docker/pulls/sinspired/subs-check-pro?logo=docker" /></a>
 <a href="https://ghcr.io/sinspired/subs-check-pro"><img src="https://img.shields.io/badge/ghcr.io-available-blue?logo=github"/></a>
 <a href="https://github.com/sinspired/subs-check-pro/wiki"><img src="https://img.shields.io/badge/Wiki-Docs-blue?logo=github"/></a>
-<img alt="GitHub Release" src="https://img.shields.io/github/v/release/sinspired/SubsCheck-Win-GUI?display_name=release&style=social&logo=github&label=Windows%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2">
+<a href="https://github.com/sinspired/subs-check-pro-gui"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/sinspired/subs-check-pro-gui?display_name=release&style=flat&logo=wails&label=%E8%B7%A8%E5%B9%B3%E5%8F%B0%E7%8E%B0%E4%BB%A3GUI&color=E2434B"></a>
 </p>
 
 # 🚀 网络代理质量检测工具
 
 **测活、测速、媒体解锁**，网络质量检测工具。采用全新设计，适配 PC 和手机设备的现代 WebUI 配置管理界面，自动生成 `mihomo` 和 `singbox` 订阅，集成 `sub-store` 前端和后端，支持一键复制分享，可在高并发运行时保持低内存占用；支持自动无缝版本更新。
+
+同时也提供了基于 **Wails v3** 现代化框架开发的跨平台本地图形界面客户端 [subs-check-pro-gui](https://github.com/sinspired/subs-check-pro-gui)。
 
 ![preview](./doc/images/Subs-Check-PRO_OG.png)
 
@@ -36,7 +38,7 @@ High-performance proxy subscription checker.
 - [x] ♾️ 支持检测百万-千万量级的节点库，依然保持较低的内存占用
 - [x] 💻 支持 `Windows` `Linux` `macOS` 多平台部署
 - [x] 🐳 支持 `docker` 部署
-- [x] 🪟 Windows 可搭配 [专门的 Windows 图形客户端](https://github.com/sinspired/SubsCheck-Win-GUI) 使用
+- [x] 🖥️ **全新跨平台现代桌面客户端**：可搭配基于 Wails v3 开发的 [subs-check-pro-gui](https://github.com/sinspired/subs-check-pro-gui) 完美实现本地图形化免命令操控（支持 Windows, macOS, Linux）
 - [x] 📱 全新设计的 WebUI 管理界面，优化小屏设备访问体验
 - [x] ✏️ 升级配置编辑器，支持自动补全与高亮，内置预览与配置分析，GUI 式编辑
 - [x] 🧩 集成 `sub-store` 前端，WebUI 一键管理
@@ -57,7 +59,7 @@ High-performance proxy subscription checker.
 - 📕 [内置文件服务](https://github.com/sinspired/subs-check-pro/wiki/File-Service)
 - 📖 [自建GitHub代理（支持提高api速率和gist加速）](https://github.com/sinspired/CF-Proxy)
 
-### 📣 使用交流，功能讨论，issure 反馈，新版本通知
+### 📣 使用交流，功能讨论，issue 反馈，新版本通知
 
 - > Telegram 群组：[subs-check性能版](https://t.me/subs_check_pro)⁠
 - > Telegram 频道：[关注频道](https://t.me/sinspired_ai)⁠
@@ -74,12 +76,18 @@ High-performance proxy subscription checker.
 ![preview](./doc/images/preview.png)  
 ![result](./doc/images/results.png)
 
-### ✨ 现代 WebUI管理界面
+### ✨ 现代 WebUI 管理界面
 
 `http://localhost:8199/admin`
 
 ![login](./doc/images/login-white.png)
 ![WebUI](./doc/images/WebUI.png)
+
+### 🖥️ Wails v3 现代化桌面客户端 (subs-check-pro-gui)
+
+如果你更喜欢原生的桌面应用程序，可以使用全新开发的客户端。它拥有完美的跨平台系统级适配、更低的系统资源开销以及极度现代化的精致 GUI 交互界面。
+
+➡️ 立即前往体验：[subs-check-pro-gui 仓库](https://github.com/sinspired/subs-check-pro-gui)
 
 ### 📊 检测结果分析报告
 
@@ -87,7 +95,7 @@ High-performance proxy subscription checker.
 
 ![analysis](./doc/images/analysis.png)
 
-### ⚡自动生成singbox订阅，支持一键分享
+### ⚡ 自动生成 singbox 订阅，支持一键分享
 
 |                                  |                                        |                                        |
 | -------------------------------- | -------------------------------------- | -------------------------------------- |
@@ -102,6 +110,9 @@ High-performance proxy subscription checker.
 > 首次运行会在当前目录生成默认配置文件。完整安装与部署见 Wiki：
 > [安装与部署](https://github.com/sinspired/subs-check-pro/wiki/Deployment)
 
+### 💻 桌面端 UI 运行（推荐）
+
+直接前往 [subs-check-pro-gui](https://github.com/sinspired/subs-check-pro-gui) 下载适配你当前系统（Windows / macOS / Linux）的安装包，开箱即用，无须配置复杂的命令行参数。
 ### 🌏 WebUI 控制面板
 
 WebUI 集成了配置编辑、订阅分享、订阅管理，内置文件服务，检测结果分析报告，日志查看等功能，请务必使用 WebUI 作为主要管理入口
