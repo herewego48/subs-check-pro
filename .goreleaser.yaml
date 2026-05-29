@@ -77,18 +77,15 @@ builds:
       - GOEXPERIMENT=jsonv2
     targets:
       # Desktop / Server
-      - linux/amd64
-      - linux/arm64
-      - linux/arm/7
-      - linux/386
-      - windows/amd64
-      - windows/arm64
-      - windows/386
-      - darwin/amd64
-      - darwin/arm64
-      # OpenWrt 路由
-      - linux/mipsle/softfloat
-      - linux/mips/softfloat
+      - linux_amd64
+      - linux_arm64
+      - linux_arm_7
+      - windows_amd64
+      - windows_arm64
+      - darwin_amd64
+      - darwin_arm64
+      # openwrt / 路由器
+      - linux_mipsle_softfloat
     mod_timestamp: "{{ .CommitTimestamp }}"
     flags:
       - -trimpath
@@ -150,11 +147,13 @@ dockers_v2:
 # 压缩可执行文件
 upx:
   - ids: [subs-check-pro]
+    enabled: true
     goos: [linux]
     goarch: [amd64, arm64]
-    compress: "best"
+    compress: best
 
   - ids: [subs-check-pro]
+    enabled: true
     goos: [windows]
     goarch: [amd64]
-    compress: "best"
+    compress: best

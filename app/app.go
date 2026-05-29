@@ -129,7 +129,7 @@ func (app *App) Initialize() error {
 
 	if config.GlobalConfig.SubStorePort != "" {
 		if runtime.GOOS == "linux" && runtime.GOARCH == "386" {
-			slog.Warn("node不支持Linux 32位系统，不启动sub-store服务")
+			slog.Warn("Node.js 不支持 Linux 32位架构，Sub-Store 服务未启动")
 		} else {
 			subStoreAddr := normalizeListenAddr(config.GlobalConfig.SubStorePort)
 			if !checkPortFree(subStoreAddr) {
