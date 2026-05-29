@@ -5,6 +5,8 @@ RUN apk add --no-cache tzdata
 # 最终镜像
 FROM chainguard/glibc-dynamic
 
+# 同时接收 TARGETPLATFORM (GoReleaser) 和 TARGETARCH (标准 Buildx)
+ARG TARGETPLATFORM
 ARG TARGETARCH
 
 WORKDIR /app
@@ -23,8 +25,10 @@ LABEL org.opencontainers.image.title="subs-check-pro" \
       org.opencontainers.image.source="https://github.com/sinspired/subs-check-pro" \
       org.opencontainers.image.documentation="https://github.com/sinspired/subs-check-pro/wiki"
 
-# TARGETARCH 由 buildx 自动注入: amd64 / arm64 / arm
-COPY bin/subs-check-pro-linux-${TARGETARCH} /app/subs-check-pro
+# 1. 如果是 GoReleaser 构建，文件存在于 $TARGETPLATFORM/ 目录下
+# 2. 如果是标准 docker buildx 构建，文件通常在 bin/ 目录下
+RUN mkdir -p /app
+COPY ${TARGETPLATFORM:-bin/subs-check-pro-linux-${TARGETARCH}} /app/subs-check-pro
 
 CMD ["/app/subs-check-pro"]
 EXPOSE 8199
