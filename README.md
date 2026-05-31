@@ -1,6 +1,8 @@
 <!-- 项目logo -->
 <p align="center">
-  <a href="https://sinspired.github.io/subs-check-pro/"><img src="doc/logo/logo.png" alt="Project Logo" width="200"/></a>
+<a href="https://sinspired.github.io/subs-check-pro/">
+  <img src="https://raw.githubusercontent.com/sinspired/subs-check-pro/main/doc/logo/logo.png" alt="Project Logo" width="200"/>
+</a>
 </p>
 <h1 align="center">Subs-Check⁺ PRO</h1>
 <p align="center" color="#6a737d">
@@ -113,6 +115,7 @@ High-performance proxy subscription checker.
 ### 💻 桌面端 UI 运行（推荐）
 
 直接前往 [subs-check-pro-gui](https://github.com/sinspired/subs-check-pro-gui) 下载适配你当前系统（Windows / macOS / Linux）的安装包，开箱即用，无须配置复杂的命令行参数。
+
 ### 🌏 WebUI 控制面板
 
 WebUI 集成了配置编辑、订阅分享、订阅管理，内置文件服务，检测结果分析报告，日志查看等功能，请务必使用 WebUI 作为主要管理入口
