@@ -2038,8 +2038,17 @@ import { initQuickPreview } from './cfg-quickpreview.js';
 
   function showLogin(show) {
     getPublicVersion()
-    if (els.loginModal) els.loginModal.classList.toggle('login-hidden', !show)
-    if (show) els.apiKeyInput?.focus()
+    const isWails = !!window.__WAILS_GUI?.baseURL
+
+    if (els.loginModal) els.loginModal.classList.toggle('login-hidden', !show || isWails)
+    if (show) {
+      if (isWails) {
+        // 调用 Wails binding 切回登录小窗
+        fetch('/gui/back-to-login').catch(() => { })
+      } else {
+        els.apiKeyInput?.focus()
+      }
+    }
   }
 
   function setAuthUI(ok) {
@@ -2844,6 +2853,17 @@ import { initQuickPreview } from './cfg-quickpreview.js';
         if (confirm('确定退出？')) doLogout()
       }
     }
+    if (window.__WAILS_GUI?.baseURL) {
+      // 调用 Wails binding 切回登录小窗
+      // 设置按钮文本
+      els.logoutBtn.textContent = "切换配置";
+      els.logoutBtnMobile.textContent = "切换配置";
+    } else {
+      // 设置按钮文本
+      els.logoutBtn.textContent = "退出登录";
+      els.logoutBtnMobile.textContent = "退出登录";
+    }
+
     els.logoutBtn?.addEventListener('click', logoutHandler)
     els.logoutBtnMobile?.addEventListener('click', logoutHandler)
 
