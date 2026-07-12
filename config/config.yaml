@@ -1,252 +1,116 @@
-# -----------进度显示-----------
-print-progress: true
-progress-mode: "auto"
+name: Subs Check Pro
 
-# -----------计划任务-----------
-# GitHub Actions 中由 Actions 调度，程序启动后立即执行一次检测
-# check-interval 设为 0 表示不循环，检测完即进入空闲
-cron-expression: ""
-check-interval: 0
+on:
+  schedule:
+    # 北京时间 17:00 = UTC 09:00
+    - cron: '0 9 * * *'
+  workflow_dispatch:
 
-# -----------检测参数-----------
-alive-concurrent: 200
-speed-concurrent: 16
-media-concurrent: 100
+permissions:
+  contents: write
 
-ipv6: false
-timeout: 6000
-concurrent: 10
-success-limit: 20
-keep-success-proxies: true
+jobs:
+  check:
+    name: 运行节点检测
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
 
-# -----------下载参数-----------
-min-speed: 512
-download-timeout: 10
-download-mb: 20
-total-speed-limit: 0
-speed-test-url: "random"
-threshold: 0.75
-gc-threshold: 20000
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-# -----------版本更新-----------
-# Actions 环境中关闭自动更新
-update: false
-update-on-startup: false
-cron-check-update: ""
-prerelease: false
-update-timeout: 5
+      - name: 启动 subs-check-pro 容器
+        run: |
+          docker run -d --name scp \
+            -v ${{ github.workspace }}/config:/app/config \
+            -v ${{ github.workspace }}/output:/app/output \
+            -e TZ=Asia/Shanghai \
+            -e API_KEY="DgX7Htd1XO" \
+            -p 8199:8199 \
+            -p 8299:8299 \
+            ghcr.io/sinspired/subs-check-pro:latest
 
-# -----------WebUI-----------
-# Actions 环境中不需要 WebUI，但保留配置以防万一
-listen-port: ":8199"
-enable-web-ui: false
-api-key: "DgX7Htd1XO"
-share-password: ""
+      - name: 等待检测完成
+        timeout-minutes: 50
+        run: |
+          echo "等待检测输出文件生成..."
+          for i in $(seq 1 100); do
+            if find output/ -name '*.yaml' -type f 2>/dev/null | grep -q .; then
+              echo "[$i] 检测到输出文件，等待写入稳定..."
+              sleep 120
+              BEFORE=$(find output/ -name '*.yaml' -type f | wc -l)
+              sleep 60
+              AFTER=$(find output/ -name '*.yaml' -type f | wc -l)
+              if [ "$BEFORE" = "$AFTER" ]; then
+                echo "文件数量稳定 ($BEFORE 个 yaml)，检测完成"
+                break
+              fi
+              echo "仍有新文件生成，继续等待..."
+            else
+              echo "[$i] 等待中... (30s)"
+            fi
+            sleep 30
+          done
 
-# -----------SUB-STORE-----------
-# Actions 环境中需要 sub-store 来生成带分流规则的 Mihomo 订阅
-sub-store-port: ":8299"
-sub-store-path: "/UvPl4GLQBvYjs3iLdrFZ"
-mihomo-overwrite-url: "http://127.0.0.1:8199/Sinspired_Rules_CDN.yaml"
+      - name: 生成 Mihomo/Clash 订阅（带分流规则）
+        run: |
+          SUB_STORE_PATH="UvPl4GLQBvYjs3iLdrFZ"
+          MIHOMO_URL="http://127.0.0.1:8299/${SUB_STORE_PATH}/api/file/mihomo"
+          OUTPUT_DIR="${{ github.workspace }}/output/sub"
 
-sub-process:
-  resolve-domain: false
-  node-split: false
-  sub-info: false
-  regex-filter-keep: true
-  regex-filter: []
-  regex-sort: []
+          echo "等待 Sub-Store 服务就绪..."
+          for i in $(seq 1 20); do
+            if curl -sf "http://127.0.0.1:8299/${SUB_STORE_PATH}/" >/dev/null 2>&1; then
+              echo "Sub-Store 已就绪"
+              break
+            fi
+            echo "[$i] 等待 Sub-Store 启动... (5s)"
+            sleep 5
+          done
 
-singbox-latest:
-  version: "1.12"
-  json: "https://raw.githubusercontent.com/sinspired/sub-store-template/main/1.12.x/sing-box.json"
-  js: "https://raw.githubusercontent.com/sinspired/sub-store-template/main/1.12.x/sing-box.js"
+          echo "正在生成 Mihomo/Clash 订阅: ${MIHOMO_URL}"
+          mkdir -p "${OUTPUT_DIR}"
+          HTTP_CODE=$(curl -sf -o "${OUTPUT_DIR}/mihomo.yaml" -w "%{http_code}" "${MIHOMO_URL}" 2>&1) || true
+          echo "HTTP 状态码: ${HTTP_CODE}"
 
-singbox-old:
-  version: "1.11"
-  json: "https://raw.githubusercontent.com/sinspired/sub-store-template/main/1.11.x/sing-box.json"
-  js: "https://raw.githubusercontent.com/sinspired/sub-store-template/main/1.11.x/sing-box.js"
+          if [ "${HTTP_CODE}" = "200" ]; then
+            echo "Mihomo 订阅生成成功"
+            echo "=== 文件大小 ==="
+            ls -lh "${OUTPUT_DIR}/mihomo.yaml"
+            echo "=== 前 30 行预览 ==="
+            head -30 "${OUTPUT_DIR}/mihomo.yaml"
+          else
+            echo "Mihomo 订阅生成失败，尝试备用地址..."
+            curl -sf -o "${OUTPUT_DIR}/mihomo.yaml" "http://127.0.0.1:8299/api/file/mihomo" 2>&1 || \
+              echo "备用地址也失败"
+          fi
 
-sub-store-sync-cron: ""
-sub-store-produce-cron: ""
-sub-store-push-service: ""
+      - name: 查看检测结果
+        if: always()
+        run: |
+          echo "=== output 目录 ==="
+          ls -lhR output/ 2>/dev/null || echo "(空)"
+          echo ""
+          echo "=== 容器日志 (末尾 80 行) ==="
+          docker logs --tail 80 scp 2>/dev/null || true
 
-# -----------节点处理-----------
-rename-node: true
-node-prefix: ""
+      - name: 停止容器
+        if: always()
+        run: docker stop scp 2>/dev/null; docker rm scp 2>/dev/null || true
 
-node-type:
-  - vmess
-  - vless
-  - trojan
-  - ss
-  - ssr
+      - name: 上传检测结果 (Artifact)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: output-${{ github.run_number }}
+          path: output/
+          retention-days: 30
 
-node-loc: []
-drop-bad-cf-nodes: false
-isp-check: false
-media-check: false
-media-check-timeout: 5
-platforms:
-  - iprisk
-  - youtube
-  - x
-enhanced-tag: true
-maxmind-db-path: ""
-callback-script: ""
-
-# -----------通知设置-----------
-apprise-api-server: "https://apprise.linkpc.dpdns.org/notify"
-recipient-url: []
-notify-title: "🔔 节点状态更新"
-
-# -----------存储参数-----------
-output-dir: ""
-save-method: "local"
-
-# webdav
-webdav-url: ""
-webdav-username: ""
-webdav-password: ""
-
-# gist
-github-gist-id: ""
-github-token: ""
-github-api-mirror: ""
-
-# r2
-worker-url: ""
-worker-token: ""
-
-# s3
-s3-endpoint: "127.0.0.1:9000"
-s3-access-id: ""
-s3-secret-key: ""
-s3-bucket: ""
-s3-use-ssl: false
-s3-bucket-lookup: "auto"
-
-# -----------代理环境-----------
-system-proxy: ""
-github-proxy: ""
-ghproxy-group:
-  - https://github.180280.xyz/
-  - https://github.732086.xyz/
-  - https://hk.gh-proxy.org/
-  - https://q-github.cnxiaobai.com/
-  - https://b.yesican.top/
-  - https://git.maomao.ovh/
-  - https://cdn.gh-proxy.org/
-  - https://git.1999111.xyz/
-  - https://git-clone.ccrui.dev/
-  - https://gh.dev.438250.xyz/
-  - https://ghproxy.gopher.ink/
-  - https://github.abyss.moe/
-  - https://gh.iinx.top/
-  - https://gh.wglee.org/
-  - https://gh.oevery.me/
-  - https://gh.136361.xyz/
-  - https://gh.haloless.com/
-  - https://github.789056.xyz/
-  - https://gh.qsd.onl/
-  - https://github.dpik.top/
-
-# -----------获取订阅-----------
-sub-urls-retry: 3
-sub-urls-timeout: 10
-success-rate: 0
-
-sub-urls-remote:
-  - https://raw.githubusercontent.com/sinspired/airport/main/subs/merged/col.txt
-  - https://raw.githubusercontent.com/sinspired/airport/main/subs/merged/cm.txt
-  - https://raw.githubusercontent.com/sinspired/airport/main/subs/merged/scan.txt
-
-sub-urls:
-  - https://raw.githubusercontent.com/anaer/Sub/main/clash.yaml
-  - https://raw.githubusercontent.com/free18/v2ray/main/c.yaml
-  - http://127.0.0.1:8199/all.yaml#KeepSucced
-  - https://conf1.hokkaido-toyoni.com/oosaka/539ab7ca94641725e6edc733ac7ec585
-  - https://gist.githubusercontent.com/shuaidaoya/9e5cf2749c0ce79932dd9229d9b4162b/raw/all.yaml
-  - https://s1.byte33.com/api/v1/client/subscribe?token=204dfecc5fe8f370dcdd22560ec0994d
-  - https://node.freeclashnode.com/uploads/2025/12/0-20251214.yaml
-  - https://node.freeclashnode.com/uploads/2025/12/1-20251214.yaml
-  - https://node.freeclashnode.com/uploads/2025/12/2-20251214.yaml
-  - https://node.freeclashnode.com/uploads/2025/12/3-20251214.yaml
-  - https://node.freeclashnode.com/uploads/2025/12/4-20251214.yaml
-  - https://free.kingfu.top/clash/proxies
-  - https://165.154.105.225/clash/proxies
-  - https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub
-  - http://192.168.1.9:8299/api/file/mihomo
-  - https://fp.ethanyang.top/clash/proxies
-  - https://pp.douyin3.xyz/clash/proxies
-  - https://a1.laieeee.buzz/clash/proxies
-  - https://raw.githubusercontent.com/snakem982/proxypool/main/source/clashmeta.yaml
-  - https://raw.githubusercontent.com/snakem982/proxypoOl/main/source/clash-meta-2.yaml
-  - https://raw.githubusercontent.com/go4sharing/sub/main/sub.yaml
-  - https://raw.githubusercontent.com/snakem982/proxypool/main/source/clash-meta.yaml
-  - https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/main/all_configs.txt
-  - https://raw.githubusercontent.com/firefoxmmx2/v2rayshare_subcription/main/subscription/clash_sub.yaml
-  - https://raw.githubusercontent.com/Roywaller/clash_subscription/main/clash_subscription.txt
-  - https://raw.githubusercontent.com/Q3dlaXpoaQ/V2rayN_Clash_Node_Getter/main/APIs/sc0.yaml
-  - https://raw.githubusercontent.com/Q3dlaXpoaQ/V2rayN_Clash_Node_Getter/main/APIs/sc1.yaml
-  - https://raw.githubusercontent.com/Q3dlaXpoaQ/V2rayN_Clash_Node_Getter/main/APIs/sc2.yaml
-  - https://raw.githubusercontent.com/Q3dlaXpoaQ/V2rayN_Clash_Node_Getter/main/APIs/sc3.yaml
-  - https://raw.githubusercontent.com/Q3dlaXpoaQ/V2rayN_Clash_Node_Getter/main/APIs/sc4.yaml
-  - https://raw.githubusercontent.com/xiaoji235/airport-free/main/clash/naidounode.txt
-  - https://raw.githubusercontent.com/mahdibland/SSAggregator/master/sub/sub_merge_yaml.yml
-  - https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/Eternity.yml
-  - https://raw.githubusercontent.com/vxiaov/free_proxies/main/clash/clash.provider.yaml
-  - https://raw.githubusercontent.com/leetomlee123/freenode/main/README.md
-  - https://raw.githubusercontent.com/chengaopan/AutoMergePublicNodes/master/list.yml
-  - https://raw.githubusercontent.com/ermaozi/get_subscribe/main/subscribe/clash.yml
-  - https://raw.githubusercontent.com/zhangkaiitugithub/passcro/main/speednodes.yaml
-  - https://raw.githubusercontent.com/mgit0001/test_clash/main/heima.txt
-  - https://raw.githubusercontent.com/mai19950/clashgithub_com/main/site
-  - https://raw.githubusercontent.com/mai19950/sites/main/sub/v2ray/base64
-  - https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2
-  - https://raw.githubusercontent.com/shahidbhutta/Clash/main/Router
-  - https://raw.githubusercontent.com/anaer/Sub/main/clash.yaml
-  - https://raw.githubusercontent.com/free18/v2ray/main/c.yaml
-  - https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.yml
-  - https://raw.githubusercontent.com/mfbpn/tg_mfbpn_sub/main/trial.yaml
-  - https://raw.githubusercontent.com/Ruk1ng001/freeSub/main/clash.yaml
-  - https://raw.githubusercontent.com/ripaojiedian/freenode/main/clash
-  - https://raw.githubusercontent.com/mfuu/v2ray/master/clash.yaml
-  - https://raw.githubusercontent.com/xiaoji235/airport-free/main/v2ray.txt
-  - https://raw.githubusercontent.com/vxiaov/free_proxies/main/links.txt
-  - https://raw.githubusercontent.com/xiaoji235/airport-free/main/v2ray/v2rayshare.txt
-  - https://raw.githubusercontent.com/MrMohebi/xray-proxy-grabber-telegram/master/collected-proxies/clash-meta/all.yaml
-  - https://raw.githubusercontent.com/ts-sf/fly/main/clash
-  - https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/yudou66.txt
-  - https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/clashmeta.txt
-  - https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/ndnode.txt
-  - https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/nodev2ray.txt
-  - https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/nodefree.txt
-  - https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/v2rayshare.txt
-  - https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/wenode.txt
-  - https://raw.githubusercontent.com/ggborr/FREEE-VPN/main/4V2ray
-  - https://raw.githubusercontent.com/SamanGho/v2ray_collector/main/v2tel_links1.txt
-  - https://raw.githubusercontent.com/SamanGho/v2ray_collector/main/v2tel_links2.txt
-  - https://raw.githubusercontent.com/acymz/AutoVPN/main/data/V2.txt
-  - https://raw.githubusercontent.com/peacefish/nodefree/main/sub/proxy_cf.yaml
-  - https://raw.githubusercontent.com/darknessm427/IranConfigCollector/main/V2.txt
-  - https://raw.githubusercontent.com/NiceVPN123/NiceVPN/main/utils/pool/output.yaml
-  - https://raw.githubusercontent.com/yorkLiu/FreeV2RayNode/main/v2ray.txt
-  - https://raw.githubusercontent.com/gfpcom/free-proxy-list/main/list/ss.txt
-  - https://raw.githubusercontent.com/gfpcom/free-proxy-list/main/list/ssr.txt
-  - https://raw.githubusercontent.com/gfpcom/free-proxy-list/main/list/trojan.txt
-  - https://raw.githubusercontent.com/gfpcom/free-proxy-list/main/list/vless.txt
-  - https://raw.githubusercontent.com/gfpcom/free-proxy-list/main/list/vmess.txt
-  - https://raw.githubusercontent.com/NiceVPN123/NiceVPN/main/Clash.yaml
-  - https://raw.githubusercontent.com/lagzian/SS-Collector/main/SS/trinity_clash.yaml
-  - https://raw.githubusercontent.com/lagzian/SS-Collector/main/SS/VM_TrinityBase
-  - https://raw.githubusercontent.com/lagzian/SS-Collector/main/SS/TrinityBase
-  - https://raw.githubusercontent.com/darknessm427/IranConfigCollector/main/bulk/ss_iran.txt
-  - https://raw.githubusercontent.com/darknessm427/IranConfigCollector/main/bulk/trojan_iran.txt
-  - https://raw.githubusercontent.com/darknessm427/IranConfigCollector/main/bulk/vless_iran.txt
-  - https://raw.githubusercontent.com/darknessm427/IranConfigCollector/main/bulk/vmess_iran.txt
-  - https://raw.githubusercontent.com/officialputuid/KangProxy/KangProxy/xResults/old-data/RAW.txt
-  - https://raw.githubusercontent.com/officialputuid/KangProxy/KangProxy/xResults/Proxies.txt
-
-subs-parse-batch: 0
-subs-dedupe-batch: 0
+      - name: 提交输出文件到仓库
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f output/ || true
+          git diff --cached --quiet || git commit -m "chore: 更新检测结果 $(date -u '+%Y-%m-%d %H:%M') UTC"
+          git push || echo "No changes to push"
