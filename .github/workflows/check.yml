@@ -1,0 +1,82 @@
+name: Subs Check Pro
+
+on:
+  schedule:
+    # 北京时间 17:00 = UTC 09:00
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    name: 运行节点检测
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 启动 subs-check-pro 容器
+        run: |
+          docker run -d --name scp \
+            -v ${{ github.workspace }}/config:/app/config \
+            -v ${{ github.workspace }}/output:/app/output \
+            -e TZ=Asia/Shanghai \
+            -e API_KEY="DgX7Htd1XO" \
+            ghcr.io/sinspired/subs-check-pro:latest
+
+      - name: 等待检测完成
+        timeout-minutes: 50
+        run: |
+          echo "等待检测输出文件生成..."
+          for i in $(seq 1 100); do
+            if find output/ -name '*.yaml' -type f 2>/dev/null | grep -q .; then
+              LATEST=$(find output/ -name '*.yaml' -type f -newer /proc/1/cwd 2>/dev/null | head -1)
+              echo "[$i] 检测到输出文件，等待写入稳定..."
+              sleep 120
+              BEFORE=$(find output/ -name '*.yaml' -type f | wc -l)
+              sleep 60
+              AFTER=$(find output/ -name '*.yaml' -type f | wc -l)
+              if [ "$BEFORE" = "$AFTER" ]; then
+                echo "文件数量稳定 ($BEFORE 个 yaml)，检测完成"
+                break
+              fi
+              echo "仍有新文件生成，继续等待..."
+            else
+              echo "[$i] 等待中... (30s)"
+            fi
+            sleep 30
+          done
+
+      - name: 查看检测结果
+        if: always()
+        run: |
+          echo "=== output 目录 ==="
+          ls -lhR output/ 2>/dev/null || echo "(空)"
+          echo ""
+          echo "=== 容器日志 (末尾 80 行) ==="
+          docker logs --tail 80 scp 2>/dev/null || true
+
+      - name: 停止容器
+        if: always()
+        run: docker stop scp 2>/dev/null; docker rm scp 2>/dev/null || true
+
+      - name: 上传检测结果 (Artifact)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: output-${{ github.run_number }}
+          path: output/
+          retention-days: 30
+
+      - name: 提交输出文件到仓库
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f output/ || true
+          git diff --cached --quiet || git commit -m "chore: 更新检测结果 $(date -u '+%Y-%m-%d %H:%M') UTC"
+          git push || echo "No changes to push"
