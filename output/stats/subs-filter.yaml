@@ -1,0 +1,15 @@
+# 订阅质量统计报告
+# 生成时间: 2026-07-12 21:50:23
+
+# 达标订阅列表 (>=0.00%)
+sub-urls:
+  - https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/main/all_configs.txt # 0.0000% (9/0)[vless: 5; ss: 3; trojan: 1]
+  - https://raw.githubusercontent.com/Delta-Kronecker/V2ray-Config/main/config/clash.yaml # 0.0000% (7/0)[vless: 5; vmess: 1; trojan: 1]
+  - https://raw.githubusercontent.com/sakha1370/OpenRay/main/output/all_valid_proxies.txt # 0.0000% (5/0)[trojan: 3; vmess: 1; vless: 1]
+  - https://raw.githubusercontent.com/sevcator/5ubscrpt10n/main/mini/m1n1-5ub-19.txt # 0.0000% (4/0)[vless: 4]
+  - https://raw.githubusercontent.com/sevcator/5ubscrpt10n/main/mini/m1n1-5ub-14.txt # 0.0000% (2/0)[vless: 2]
+  - https://raw.githubusercontent.com/anaer/Sub/main/clash.yaml # 0.0000% (2/0)[vmess: 1; vless: 1]
+  - https://raw.githubusercontent.com/xiaoji235/airport-free/main/v2ray.txt # 0.0000% (1/0)[vless: 1]
+  - https://raw.githubusercontent.com/asgharkapk/Sub-Config-Extractor/main/output_configs/mixed/Leon406/SubCrawler/sub/share/a11.yaml # 0.0000% (1/0)[vmess: 1]
+  - https://raw.githubusercontent.com/free18/v2ray/main/c.yaml # 0.0000% (1/0)[vless: 1]
+

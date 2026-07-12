@@ -1,0 +1,99 @@
+# 检测结果分析报告
+# 生成时间: 2026-07-12 21:50:23
+
+summary: |
+  用时 22秒,消耗流量 750.09 MB, 检测到 32 个可用节点，设置速度下限 512 KB/s。覆盖 10 个国家/地区 [Top: US]; 线路分布多样 [CF 中转 50.0%, VPS 46.9%]; 流媒体解锁: [无]; AI 解锁[无]; 代理协议: vless|trojan|vmess|ss。
+
+check_info:
+  check_time: 07-12 21:50
+  check_time_raw: 2026-07-12T21:50:01+08:00
+  check_end_time_raw: 2026-07-12T21:50:23+08:00
+  check_duration: 22秒
+  check_duration_raw: 22
+  check_count: 1375
+  check_count_raw: 1375
+  check_traffic_total: 750.09 MB
+  check_traffic_total_raw: 786528922
+  check_traffic_upload_raw: 4125615
+  check_traffic_download_raw: 782403307
+  check_min_speed: 512
+  check_success_limit: 20
+
+global_analysis:
+  alive_count: 32
+  geography_distribution:
+    US: 19
+    NL: 4
+    FR: 3
+    GB: 2
+    FI: 1
+    CA: 1
+    KR: 1
+    SG: 1
+    ES: 1
+    DE: 1
+  protocol_distribution:
+    vless: 20
+    trojan: 5
+    vmess: 4
+    ss: 3
+  quality_metrics:
+    cf_consistent_ratio: 50.0%
+    cf_details:
+      consistent_¹⁺:
+        US: 13
+        KR: 1
+        NL: 1
+        DE: 1
+      inconsistent_⁰:
+        FI: 1
+        SG: 1
+      blocked_⁻¹:
+        US: 1
+    vps_details_²:
+      US: 5
+      NL: 3
+      FR: 3
+      GB: 2
+      CA: 1
+      ES: 1
+
+subs_ranking:
+  - url: https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/main/all_configs.txt
+    stats: { rate: 900.0000%, success: 9, total: 0 }
+    protocols: { vless: 5, ss: 3, trojan: 1 }
+    top_locations: [US|NL|GB]
+  - url: https://raw.githubusercontent.com/Delta-Kronecker/V2ray-Config/main/config/clash.yaml
+    stats: { rate: 700.0000%, success: 7, total: 0 }
+    protocols: { vless: 5, vmess: 1, trojan: 1 }
+    top_locations: [US|SG|FR]
+  - url: https://raw.githubusercontent.com/sakha1370/OpenRay/main/output/all_valid_proxies.txt
+    stats: { rate: 500.0000%, success: 5, total: 0 }
+    protocols: { trojan: 3, vmess: 1, vless: 1 }
+    top_locations: [US|FR|FI]
+  - url: https://raw.githubusercontent.com/sevcator/5ubscrpt10n/main/mini/m1n1-5ub-19.txt
+    stats: { rate: 400.0000%, success: 4, total: 0 }
+    protocols: { vless: 4 }
+    top_locations: [US|KR]
+  - url: https://raw.githubusercontent.com/sevcator/5ubscrpt10n/main/mini/m1n1-5ub-14.txt
+    stats: { rate: 200.0000%, success: 2, total: 0 }
+    protocols: { vless: 2 }
+    top_locations: [GB|US]
+  - url: https://raw.githubusercontent.com/anaer/Sub/main/clash.yaml
+    stats: { rate: 200.0000%, success: 2, total: 0 }
+    protocols: { vless: 1, vmess: 1 }
+    top_locations: [ES|US]
+  - url: https://raw.githubusercontent.com/xiaoji235/airport-free/main/v2ray.txt
+    stats: { rate: 100.0000%, success: 1, total: 0 }
+    protocols: { vless: 1 }
+    top_locations: [US]
+  - url: https://raw.githubusercontent.com/asgharkapk/Sub-Config-Extractor/main/output_configs/mixed/Leon406/SubCrawler/sub/share/a11.yaml
+    stats: { rate: 100.0000%, success: 1, total: 0 }
+    protocols: { vmess: 1 }
+    top_locations: [CA]
+  - url: https://raw.githubusercontent.com/free18/v2ray/main/c.yaml
+    stats: { rate: 100.0000%, success: 1, total: 0 }
+    protocols: { vless: 1 }
+    top_locations: [US]
+
+subs_ranking_bad:
