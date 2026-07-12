@@ -164,7 +164,6 @@ sub-urls-remote:
 sub-urls:
   - https://raw.githubusercontent.com/anaer/Sub/main/clash.yaml
   - https://raw.githubusercontent.com/free18/v2ray/main/c.yaml
-  - http://127.0.0.1:8199/all.yaml#KeepSucced
   - https://conf1.hokkaido-toyoni.com/oosaka/539ab7ca94641725e6edc733ac7ec585
   - https://gist.githubusercontent.com/shuaidaoya/9e5cf2749c0ce79932dd9229d9b4162b/raw/all.yaml
   - https://s1.byte33.com/api/v1/client/subscribe?token=204dfecc5fe8f370dcdd22560ec0994d
@@ -176,7 +175,6 @@ sub-urls:
   - https://free.kingfu.top/clash/proxies
   - https://165.154.105.225/clash/proxies
   - https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub
-  - http://192.168.1.9:8299/api/file/mihomo
   - https://fp.ethanyang.top/clash/proxies
   - https://pp.douyin3.xyz/clash/proxies
   - https://a1.laieeee.buzz/clash/proxies
